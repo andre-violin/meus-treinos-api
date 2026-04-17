@@ -13,7 +13,9 @@ import {
 } from 'fastify-type-provider-zod'
 import z from 'zod'
 
+import { WeekDay } from './generated/prisma/enums.js'
 import { auth } from './lib/auth.js'
+import { CreateWorkoutPlan } from './usecases/CreateWorkoutPlan.js'
 const app = Fastify({
   logger: true,
 })
@@ -24,7 +26,7 @@ app.setSerializerCompiler(serializerCompiler)
 await app.register(fastifySwagger, {
   openapi: {
     info: {
-      title: 'Fit AI API',
+      title: 'Meus Treinos API',
       description: 'API para gerenciamento de treinos e exercícios',
       version: '1.0.0',
     },
@@ -44,8 +46,8 @@ await app.register(ScalarApiReference, {
     theme: 'elysiajs',
     sources: [
       {
-        title: 'Fit AI API',
-        slug: 'fit-ai-api',
+        title: 'Meus Treinos API',
+        slug: 'meus-treinos-api',
         url: '/swagger.json',
       },
       {
@@ -92,6 +94,82 @@ app.withTypeProvider<ZodTypeProvider>().route({
   },
 })
 
+app.withTypeProvider<ZodTypeProvider>().route({
+  method: 'POST',
+  url: '/workout-plans',
+  schema: {
+    body: z.object({
+      name: z.string().trim().min(1),
+      workoutDays: z.array(
+        z.object({
+          name: z.string().trim().min(1),
+          weekDay: z.enum(WeekDay),
+          isRest: z.boolean(),
+          estimatedDurationInSeconds: z.number().min(1),
+          exercises: z.array(
+            z.object({
+              order: z.number().min(0),
+              name: z.string().trim().min(1),
+              sets: z.number().min(1),
+              reps: z.number().min(1),
+              restTimeInSeconds: z.number().min(0),
+            })
+          ),
+        })
+      ),
+    }),
+    response: {
+      201: z.object({
+        id: z.uuid(),
+        name: z.string().trim().min(1),
+        workoutDays: z.array(
+          z.object({
+            name: z.string().trim().min(1),
+            weekDay: z.enum(WeekDay),
+            isRest: z.boolean(),
+            estimatedDurationInSeconds: z.number().min(1),
+            exercises: z.array(
+              z.object({
+                order: z.number().min(0),
+                name: z.string().trim().min(1),
+                sets: z.number().min(1),
+                reps: z.number().min(1),
+                restTimeInSeconds: z.number().min(0),
+              })
+            ),
+          })
+        ),
+      }),
+      400: z.object({
+        error: z.string(),
+        code: z.string(),
+      }),
+      401: z.object({
+        error: z.string(),
+        code: z.string(),
+      }),
+    },
+  },
+  handler: async (request, reply) => {
+    const session = await auth.api.getSession({
+      headers: fromNodeHeaders(request.headers),
+    })
+    if (!session) {
+      return reply.status(401).send({
+        error: 'Unauthorized',
+        code: 'UNAUTHORIZED',
+      })
+    }
+    const createWorkoutPlan = new CreateWorkoutPlan()
+    const result = await createWorkoutPlan.execute({
+      userId: session.user.id,
+      name: request.body.name,
+      workoutDays: request.body.workoutDays,
+    })
+    return reply.status(201).send(result)
+  },
+})
+
 app.route({
   method: ['GET', 'POST'],
   url: '/api/auth/*',
@@ -127,6 +205,7 @@ app.route({
 try {
   await app.listen({ port: Number(process.env.PORT) })
   console.log(`Server is running on port ${process.env.PORT}`)
+  console.log(`Server is running on http://localhost:${process.env.PORT}`)
 } catch (err) {
   app.log.error(err)
   process.exit(1)
