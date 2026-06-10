@@ -15,6 +15,7 @@ import z from 'zod'
 
 import { auth } from './lib/auth.js'
 import { homeRoutes } from './routes/home.js'
+import { statsRoutes } from './routes/stats.js'
 import { workoutPlanRoutes } from './routes/workout-plans.js'
 const app = Fastify({
   logger: true,
@@ -64,6 +65,12 @@ await app.register(fastifyCors, {
   credentials: true,
 })
 
+// RESTful
+// Routes
+await app.register(homeRoutes, { prefix: '/home' })
+await app.register(statsRoutes, { prefix: '/stats' })
+await app.register(workoutPlanRoutes, { prefix: '/workout-plans' })
+
 app.withTypeProvider<ZodTypeProvider>().route({
   method: 'GET',
   url: '/swagger.json',
@@ -93,11 +100,6 @@ app.withTypeProvider<ZodTypeProvider>().route({
     }
   },
 })
-
-// Routes
-await app.register(homeRoutes, { prefix: '/home' })
-
-await app.register(workoutPlanRoutes, { prefix: '/workout-plans' })
 
 app.route({
   method: ['GET', 'POST'],
