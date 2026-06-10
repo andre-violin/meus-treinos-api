@@ -122,12 +122,12 @@ src/
 
 ## Modelos de dados
 
-| Modelo           | Descrição                                      |
-| ---------------- | ---------------------------------------------- |
-| `User`           | Usuário da aplicação                           |
-| `WorkoutPlan`    | Plano de treino de um usuário                  |
-| `WorkoutDay`     | Dia de treino dentro de um plano               |
-| `WorkoutExercise`| Exercício pertencente a um dia de treino       |
-| `Session`        | Sessão de autenticação (gerenciada pelo Better Auth) |
-| `Account`        | Conta vinculada ao usuário                     |
-| `Verification`   | Token de verificação de e-mail                 |
+| Modelo            | Descrição                                            |
+| ----------------- | ---------------------------------------------------- |
+| `User`            | Usuário da aplicação                                 |
+| `WorkoutPlan`     | Plano de treino de um usuário                        |
+| `WorkoutDay`      | Dia de treino dentro de um plano                     |
+| `WorkoutExercise` | Exercício pertencente a um dia de treino             |
+| `Session`         | Sessão de autenticação (gerenciada pelo Better Auth) |
+| `Account`         | Conta vinculada ao usuário                           |
+| `Verification`    | Token de verificação de e-mail                       |
